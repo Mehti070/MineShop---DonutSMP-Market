@@ -22,6 +22,8 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-darkbg text-gray-100 font-sans antialiased min-h-screen flex flex-col justify-between">
 
@@ -595,20 +597,24 @@
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Application Script with Supabase Integration -->
     <script>
-        let currentUser = null; // Текущий залогиненный пользователь
-        let usersDB = [];      // База всех пользователей
-        let ordersList = [];   // Список заказов
+        // Инициализация Supabase
+        const SUPABASE_URL = 'https://gybcnlymntrgmaippawe.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5YmNubHltbnRyZ21haXBwYXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Mjg2NTYsImV4cCI6MjEwNDUwNDY1Nn0.Bz6MKS4x20AszDO8JzluKsCcdG9DHRbchqxJDrQvHCw';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        // Список всех администраторов для жесткой гарантии
+        let currentUser = null; 
+        let usersDB = [];      
+        let ordersList = [];   
+
         const adminAccounts = [
             { email: 'mehtiagazade07@gmail.com', password: 'Agayev070' },
             { email: 'game_pro12328@gmail.com', password: 'GamePro070' }
         ];
 
-        // Загрузка данных из localStorage при старте
-        function loadData() {
+        // Загрузка пользователей из localStorage и заказов из Supabase
+        async function loadData() {
             let savedUsers = localStorage.getItem('mineshop_users');
             if (savedUsers) {
                 try { usersDB = JSON.parse(savedUsers); } catch(e) { usersDB = []; }
@@ -627,15 +633,8 @@
             });
             saveUsers();
 
-            let savedOrders = localStorage.getItem('mineshop_orders');
-            if (savedOrders) {
-                try { ordersList = JSON.parse(savedOrders); } catch(e) { ordersList = []; }
-            } else {
-                ordersList = [
-                    { id: '#8491', player: 'Notch', email: 'notch@minecraft.net', password: 'notchpassword1', item: 'In-game Money (10M)', price: '$3.00', status: 'Pending Delivery' }
-                ];
-                saveOrders();
-            }
+            // Загружаем заказы из облачной базы Supabase
+            await loadOrdersFromSupabase();
 
             let sessionUser = sessionStorage.getItem('mineshop_session');
             if(sessionUser) {
@@ -649,21 +648,78 @@
                     }
                 } catch(e) { currentUser = null; }
             }
+            updateUIRoles();
         }
 
         function saveUsers() {
             localStorage.setItem('mineshop_users', JSON.stringify(usersDB));
         }
 
-        function saveOrders() {
-            localStorage.setItem('mineshop_orders', JSON.stringify(ordersList));
+        // Загрузка заказов из Supabase
+        async function loadOrdersFromSupabase() {
+            let { data, error } = await supabaseClient
+                .from('orders')
+                .select('*')
+                .order('id', { ascending: false });
+
+            if (error) {
+                console.error('Ошибка загрузки заказов:', error);
+                ordersList = [];
+            } else {
+                // Преобразуем поля из базы под формат приложения
+                ordersList = (data || []).map(row => ({
+                    dbId: row.id,
+                    id: row.order_id,
+                    player: row.player,
+                    email: row.email,
+                    password: row.password,
+                    item: row.item,
+                    price: row.price,
+                    status: row.status
+                }));
+            }
+            if (typeof renderOrdersTable === 'function' && currentUser && currentUser.role === 'Admin') {
+                renderOrdersTable();
+            }
         }
 
-        function clearAllOrders() {
+        // Сохранение нового заказа в Supabase
+        async function saveOrderToSupabase(newOrder) {
+            let { data, error } = await supabaseClient
+                .from('orders')
+                .insert([
+                    {
+                        order_id: newOrder.id,
+                        player: newOrder.player,
+                        email: newOrder.email,
+                        password: newOrder.password,
+                        item: newOrder.item,
+                        price: newOrder.price,
+                        status: newOrder.status
+                    }
+                ]);
+
+            if (error) {
+                console.error('Ошибка при сохранении заказа:', error);
+                alert('Ошибка при отправке заказа в базу данных!');
+            } else {
+                await loadOrdersFromSupabase();
+            }
+        }
+
+        async function clearAllOrders() {
             if(confirm('Are you sure you want to clear all order history?')) {
-                ordersList = [];
-                saveOrders();
-                renderOrdersTable();
+                let { error } = await supabaseClient
+                    .from('orders')
+                    .delete()
+                    .neq('id', 0); // Удаляем все записи
+
+                if (error) {
+                    console.error('Ошибка очистки:', error);
+                } else {
+                    ordersList = [];
+                    renderOrdersTable();
+                }
             }
         }
 
@@ -898,7 +954,7 @@
                     adminPanel.classList.remove('hidden');
                     navAdminLink.classList.remove('hidden');
                     adminEmailDisplay.textContent = currentUser.email;
-                    renderOrdersTable();
+                    loadOrdersFromSupabase();
                 } else {
                     roleText.textContent = 'Buyer';
                     roleIcon.className = 'w-2 h-2 rounded-full bg-emerald-500';
@@ -914,9 +970,7 @@
             }
         }
 
-        updateUIRoles();
-
-        function simulateCheckout() {
+        async function simulateCheckout() {
             let nick = document.getElementById('mcNick').value.trim();
             if(!nick) {
                 alert('Please enter your Minecraft nickname!');
@@ -934,12 +988,8 @@
                 status: 'Pending Delivery'
             };
 
-            ordersList.unshift(newOrder);
-            saveOrders();
-
-            if(currentUser && currentUser.role === 'Admin') {
-                renderOrdersTable();
-            }
+            // Отправляем заказ в Supabase вместо localStorage
+            await saveOrderToSupabase(newOrder);
 
             closeModal();
             showWaitScreenMessage();
@@ -1052,7 +1102,7 @@
             document.getElementById('adminCoordsModal').classList.add('hidden');
         }
 
-        function submitAdminCoords() {
+        async function submitAdminCoords() {
             let text = document.getElementById('adminCoordsInput').value.trim();
             if(!text) {
                 alert('Please enter message.');
@@ -1060,9 +1110,19 @@
             }
 
             if(activeOrderIndex !== null && ordersList[activeOrderIndex]) {
-                ordersList[activeOrderIndex].status = 'Delivered';
-                saveOrders();
-                renderOrdersTable();
+                let targetOrder = ordersList[activeOrderIndex];
+                
+                // Обновляем статус в Supabase по уникальному ID строки (dbId)
+                let { error } = await supabaseClient
+                    .from('orders')
+                    .update({ status: 'Delivered' })
+                    .eq('id', targetOrder.dbId);
+
+                if (error) {
+                    console.error('Ошибка обновления статуса:', error);
+                } else {
+                    await loadOrdersFromSupabase();
+                }
             }
 
             closeAdminCoordsModal();
@@ -1087,6 +1147,13 @@
                 alert('Order status updated to Delivered.');
             }
         }
+
+        // Периодическое обновление заказов для админки каждые 10 секунд
+        setInterval(() => {
+            if (currentUser && currentUser.role === 'Admin') {
+                loadOrdersFromSupabase();
+            }
+        }, 10000);
     </script>
 </body>
 </html>
