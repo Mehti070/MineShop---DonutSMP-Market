@@ -613,7 +613,6 @@
             { email: 'game_pro12328@gmail.com', password: 'GamePro070' }
         ];
 
-        // Загрузка пользователей из localStorage и заказов из Supabase
         async function loadData() {
             let savedUsers = localStorage.getItem('mineshop_users');
             if (savedUsers) {
@@ -633,7 +632,6 @@
             });
             saveUsers();
 
-            // Загружаем заказы из облачной базы Supabase
             await loadOrdersFromSupabase();
 
             let sessionUser = sessionStorage.getItem('mineshop_session');
@@ -655,20 +653,18 @@
             localStorage.setItem('mineshop_users', JSON.stringify(usersDB));
         }
 
-        // Загрузка заказов из Supabase
+        // Загрузка заказов из Supabase без ошибок отсутствия системного id
         async function loadOrdersFromSupabase() {
             let { data, error } = await supabaseClient
                 .from('orders')
-                .select('*')
-                .order('id', { ascending: false });
+                .select('*');
 
             if (error) {
                 console.error('Ошибка загрузки заказов:', error);
                 ordersList = [];
             } else {
-                // Преобразуем поля из базы под формат приложения
                 ordersList = (data || []).map(row => ({
-                    dbId: row.id,
+                    dbId: row.order_id,
                     id: row.order_id,
                     player: row.player,
                     email: row.email,
@@ -683,7 +679,6 @@
             }
         }
 
-        // Сохранение нового заказа в Supabase
         async function saveOrderToSupabase(newOrder) {
             let { data, error } = await supabaseClient
                 .from('orders')
@@ -712,7 +707,7 @@
                 let { error } = await supabaseClient
                     .from('orders')
                     .delete()
-                    .neq('id', 0); // Удаляем все записи
+                    .neq('order_id', '___empty___'); // Удаляем все записи
 
                 if (error) {
                     console.error('Ошибка очистки:', error);
@@ -988,7 +983,6 @@
                 status: 'Pending Delivery'
             };
 
-            // Отправляем заказ в Supabase вместо localStorage
             await saveOrderToSupabase(newOrder);
 
             closeModal();
@@ -1112,11 +1106,11 @@
             if(activeOrderIndex !== null && ordersList[activeOrderIndex]) {
                 let targetOrder = ordersList[activeOrderIndex];
                 
-                // Обновляем статус в Supabase по уникальному ID строки (dbId)
+                // Исправлено обновление статуса по order_id вместо отсутствующего id
                 let { error } = await supabaseClient
                     .from('orders')
                     .update({ status: 'Delivered' })
-                    .eq('id', targetOrder.dbId);
+                    .eq('order_id', targetOrder.dbId);
 
                 if (error) {
                     console.error('Ошибка обновления статуса:', error);
