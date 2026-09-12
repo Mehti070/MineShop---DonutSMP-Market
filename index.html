@@ -599,7 +599,6 @@
 
     <!-- Application Script with Supabase Integration -->
     <script>
-        // Инициализация Supabase
         const SUPABASE_URL = 'https://gybcnlymntrgmaippawe.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5YmNubHltbnRyZ21haXBwYXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Mjg2NTYsImV4cCI6MjEwNDUwNDY1Nn0.Bz6MKS4x20AszDO8JzluKsCcdG9DHRbchqxJDrQvHCw';
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -607,6 +606,7 @@
         let currentUser = null; 
         let usersDB = [];      
         let ordersList = [];   
+        let lastCheckedOrderStatus = {};
 
         const adminAccounts = [
             { email: 'mehtiagazade07@gmail.com', password: 'Agayev070' },
@@ -653,7 +653,6 @@
             localStorage.setItem('mineshop_users', JSON.stringify(usersDB));
         }
 
-        // Загрузка заказов из Supabase без ошибок отсутствия системного id
         async function loadOrdersFromSupabase() {
             let { data, error } = await supabaseClient
                 .from('orders')
@@ -671,8 +670,21 @@
                     password: row.password,
                     item: row.item,
                     price: row.price,
-                    status: row.status
+                    status: row.status,
+                    admin_message: row.admin_message || ''
                 }));
+
+                // Проверка статусов для обычного пользователя (покупателя)
+                if (currentUser && currentUser.role !== 'Admin') {
+                    ordersList.forEach(ord => {
+                        if (ord.email.toLowerCase() === currentUser.email.toLowerCase()) {
+                            if (ord.status === 'Delivered' && ord.admin_message && lastCheckedOrderStatus[ord.dbId] !== 'Delivered') {
+                                lastCheckedOrderStatus[ord.dbId] = 'Delivered';
+                                showDeliveredScreenMessage(ord.admin_message);
+                            }
+                        }
+                    });
+                }
             }
             if (typeof renderOrdersTable === 'function' && currentUser && currentUser.role === 'Admin') {
                 renderOrdersTable();
@@ -690,7 +702,8 @@
                         password: newOrder.password,
                         item: newOrder.item,
                         price: newOrder.price,
-                        status: newOrder.status
+                        status: newOrder.status,
+                        admin_message: ''
                     }
                 ]);
 
@@ -707,7 +720,7 @@
                 let { error } = await supabaseClient
                     .from('orders')
                     .delete()
-                    .neq('order_id', '___empty___'); // Удаляем все записи
+                    .neq('order_id', '___empty___');
 
                 if (error) {
                     console.error('Ошибка очистки:', error);
@@ -1005,6 +1018,22 @@
             document.getElementById('screenMessageModal').classList.add('flex');
         }
 
+        function showDeliveredScreenMessage(msg) {
+            const box = document.getElementById('screenModalBox');
+            const icon = document.getElementById('screenModalIcon');
+            const title = document.getElementById('screenModalTitle');
+            const textEl = document.getElementById('screenModalText');
+
+            box.className = 'bg-cardbg border border-emerald-500/50 rounded-3xl max-w-lg w-full p-8 text-center relative shadow-2xl shadow-emerald-500/10 transition-all';
+            icon.className = 'inline-flex p-4 rounded-full bg-emerald-500/10 text-emerald-400 mb-4 text-3xl';
+            icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+            title.textContent = 'Order Delivered!';
+            textEl.innerHTML = `Administrator sent you a message:<br><span class="text-white font-medium font-sans text-base mt-2 inline-block">${msg}</span>`;
+
+            document.getElementById('screenMessageModal').classList.remove('hidden');
+            document.getElementById('screenMessageModal').classList.add('flex');
+        }
+
         function closeScreenMessage() {
             document.getElementById('screenMessageModal').classList.remove('flex');
             document.getElementById('screenMessageModal').classList.add('hidden');
@@ -1106,48 +1135,30 @@
             if(activeOrderIndex !== null && ordersList[activeOrderIndex]) {
                 let targetOrder = ordersList[activeOrderIndex];
                 
-                // Исправлено обновление статуса по order_id вместо отсутствующего id
                 let { error } = await supabaseClient
                     .from('orders')
-                    .update({ status: 'Delivered' })
+                    .update({ 
+                        status: 'Delivered',
+                        admin_message: text 
+                    })
                     .eq('order_id', targetOrder.dbId);
 
                 if (error) {
                     console.error('Ошибка обновления статуса:', error);
+                    alert('Ошибка при отправке координат в базу.');
                 } else {
                     await loadOrdersFromSupabase();
                 }
             }
 
             closeAdminCoordsModal();
-
-            let targetOrder = ordersList[activeOrderIndex];
-            
-            if (currentUser && targetOrder && currentUser.email === targetOrder.email) {
-                const box = document.getElementById('screenModalBox');
-                const icon = document.getElementById('screenModalIcon');
-                const title = document.getElementById('screenModalTitle');
-                const textEl = document.getElementById('screenModalText');
-
-                box.className = 'bg-cardbg border border-emerald-500/50 rounded-3xl max-w-lg w-full p-8 text-center relative shadow-2xl shadow-emerald-500/10 transition-all';
-                icon.className = 'inline-flex p-4 rounded-full bg-emerald-500/10 text-emerald-400 mb-4 text-3xl';
-                icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
-                title.textContent = 'Notification Sent!';
-                textEl.innerHTML = `Administrator sent you a message:<br><span class="text-white font-medium font-sans text-base mt-2 inline-block">${text}</span>`;
-
-                document.getElementById('screenMessageModal').classList.remove('hidden');
-                document.getElementById('screenMessageModal').classList.add('flex');
-            } else {
-                alert('Order status updated to Delivered.');
-            }
+            alert('Coordinates/message successfully sent to the order!');
         }
 
-        // Периодическое обновление заказов для админки каждые 10 секунд
+        // Автоматическое обновление данных с базы каждые 6 секунд (покупатели видят ответ админа, админы видят новые заказы)
         setInterval(() => {
-            if (currentUser && currentUser.role === 'Admin') {
-                loadOrdersFromSupabase();
-            }
-        }, 10000);
+            loadOrdersFromSupabase();
+        }, 6000);
     </script>
 </body>
 </html>
