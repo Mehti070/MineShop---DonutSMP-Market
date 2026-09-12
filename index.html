@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MineShop — DonutSMP Market</title>
-    <!-- Tailwind CSS -->
+    <title>MineShop — DonutSMP Market & Auction</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -22,12 +21,10 @@
         }
     </script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Supabase JS Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-darkbg text-gray-100 font-sans antialiased min-h-screen flex flex-col justify-between">
 
-    <!-- Navigation -->
     <header class="border-b border-gray-800 bg-darkbg/85 backdrop-blur sticky top-0 z-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
@@ -41,11 +38,18 @@
             <nav class="hidden md:flex items-center space-x-6 text-sm font-medium text-gray-300">
                 <a href="#" class="hover:text-accent transition">Home</a>
                 <a href="#catalog" class="hover:text-accent transition">Catalog</a>
+                <a href="#live-auction" class="hover:text-accent transition text-emerald-400 font-semibold"><i class="fa-solid fa-chart-line mr-1"></i> Auction Live</a>
                 <a href="#how-it-works" class="hover:text-accent transition">How It Works</a>
                 <a href="#support" class="hover:text-accent transition">Support</a>
-                <a href="#admin-panel-section" id="navAdminLink" class="hidden hover:text-accent transition text-purple-400 font-semibold"><i class="fa-solid fa-shield-halved mr-1"></i> Admin Panel</a>
+                <a href="#admin-panel-section" id="navAdminLink" class="hidden hover:text-accent transition text-purple-400 font-semibold"><i class="fa-solid fa-shield-halved mr-1"></i> Admin</a>
             </nav>
             <div class="flex items-center space-x-4">
+                <button onclick="openCartModal()" class="relative bg-cardbg hover:bg-gray-800 border border-gray-700 text-gray-200 px-3.5 py-2 rounded-xl text-sm font-semibold transition flex items-center space-x-2">
+                    <i class="fa-solid fa-cart-shopping text-accent"></i>
+                    <span class="hidden sm:inline">Cart</span>
+                    <span id="cartCountBadge" class="bg-accent text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                </button>
+
                 <div id="userBadge" class="hidden items-center space-x-2 bg-cardbg border border-gray-800 px-3 py-1.5 rounded-xl text-xs font-semibold">
                     <span id="roleIcon" class="w-2 h-2 rounded-full"></span>
                     <span id="roleText" class="text-gray-300"></span>
@@ -53,14 +57,10 @@
                 <button onclick="openAuthModal()" id="authBtn" class="bg-cardbg hover:bg-gray-800 border border-gray-700 text-gray-200 px-4 py-2 rounded-xl text-sm font-semibold transition">
                     <i class="fa-solid fa-user mr-1.5"></i> Login / Register
                 </button>
-                <a href="#catalog" class="bg-accent hover:bg-accenthover text-white px-4 py-2 rounded-xl text-sm font-semibold transition shadow-md shadow-accent/20 hidden sm:inline-block">
-                    Shop Now
-                </a>
             </div>
         </div>
     </header>
 
-    <!-- Hero Section -->
     <main class="flex-grow">
         <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
             <div class="inline-block mb-4 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-wider">
@@ -72,17 +72,16 @@
             <p class="max-w-2xl mx-auto text-gray-400 text-lg mb-8">
                 Buy in-game money, rare spawners, blocks, and items at the best prices with fast delivery directly on the server!
             </p>
-            <div class="flex justify-center gap-4">
+            <div class="flex justify-center gap-4 flex-wrap">
                 <a href="#catalog" class="bg-accent hover:bg-accenthover text-white px-8 py-3 rounded-xl font-bold transition shadow-lg shadow-accent/30">
                     View Catalog
                 </a>
-                <a href="#how-it-works" class="bg-cardbg hover:bg-gray-800 border border-gray-700 text-gray-300 px-8 py-3 rounded-xl font-bold transition">
-                    How it Works
+                <a href="#live-auction" class="bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-400 px-8 py-3 rounded-xl font-bold transition">
+                    Live Auction Prices
                 </a>
             </div>
         </section>
 
-        <!-- Admin Panel Section -->
         <section id="admin-panel-section" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden">
             <div class="bg-cardbg border border-purple-500/40 rounded-3xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-purple-500/10 w-96 h-96 rounded-full blur-3xl pointer-events-none"></div>
@@ -98,22 +97,22 @@
                         <button onclick="clearAllOrders()" class="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center">
                             <i class="fa-solid fa-trash mr-1.5"></i> Clear History
                         </button>
-                        <div id="adminEmailDisplay" class="bg-darkbg px-4 py-2 rounded-xl border border-gray-800 text-xs text-gray-400">
+                        <div id="adminEmailDisplay" class="hidden sm:block bg-darkbg px-4 py-2 rounded-xl border border-gray-800 text-xs text-gray-400">
                             Logged as: <span class="text-white font-semibold"></span>
                         </div>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                <div class="w-full overflow-x-auto">
+                    <table class="w-full text-left border-collapse min-w-[800px]">
                         <thead>
                             <tr class="border-b border-gray-800 text-xs text-gray-400 uppercase tracking-wider">
                                 <th class="py-3 px-4">Order ID</th>
                                 <th class="py-3 px-4">Player Nick</th>
                                 <th class="py-3 px-4">Account Email</th>
                                 <th class="py-3 px-4">Password</th>
-                                <th class="py-3 px-4">Item & Qty</th>
-                                <th class="py-3 px-4">Price</th>
+                                <th class="py-3 px-4">Items / Cart Content</th>
+                                <th class="py-3 px-4">Total Price</th>
                                 <th class="py-3 px-4">Status</th>
                                 <th class="py-3 px-4 text-right">Actions</th>
                             </tr>
@@ -127,7 +126,28 @@
             </div>
         </section>
 
-        <!-- Catalog Section -->
+        <section id="live-auction" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="bg-cardbg border border-emerald-500/30 rounded-3xl p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+                <div class="absolute top-0 left-0 bg-emerald-500/5 w-96 h-96 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                    <div>
+                        <div class="flex items-center space-x-2 text-emerald-400 text-xs font-bold uppercase tracking-wider mb-1">
+                            <i class="fa-solid fa-satellite-dish animate-pulse"></i> <span>Real-Time Market Tracking</span>
+                        </div>
+                        <h2 class="text-2xl sm:text-3xl font-black">DonutSMP Live Auction Tracker</h2>
+                        <p class="text-xs sm:text-sm text-gray-400 mt-1">Live market prices synchronized with donut.auction stats.</p>
+                    </div>
+                    <div class="bg-darkbg border border-gray-800 px-4 py-2 rounded-xl text-xs text-emerald-400 flex items-center space-x-2">
+                        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-ping"></span>
+                        <span class="font-semibold">Live Feed Active</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4" id="liveAuctionGrid"></div>
+            </div>
+        </section>
+
         <section id="catalog" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="flex justify-between items-center mb-8">
                 <h2 class="text-2xl font-bold border-l-4 border-accent pl-3">Server Catalog</h2>
@@ -136,7 +156,6 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 
-                <!-- 1. In-game Money -->
                 <div class="bg-cardbg border border-gray-800 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/50 transition group">
                     <div>
                         <div class="bg-darkbg h-48 rounded-xl mb-4 relative overflow-hidden shadow-inner">
@@ -145,13 +164,13 @@
                             </div>
                             <div id="card-back-0" class="absolute inset-0 bg-darkbg/95 p-4 hidden flex-col justify-center text-left text-xs text-gray-300 overflow-y-auto">
                                 <p class="font-bold text-emerald-400 mb-1 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> In-game Money Details</p>
-                                <p class="text-gray-300 leading-relaxed">Instantly boost your balance on DonutSMP. Funds are transferred safely through system automation or direct admin deposit. Select your required millions using the slider below.</p>
+                                <p class="text-gray-300 leading-relaxed">Instantly boost your balance on DonutSMP. Currency is processed individually per order.</p>
                             </div>
                             <button onclick="toggleCardInfo(0)" class="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/90 text-white w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur z-10 transition">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
                             </button>
                         </div>
-                        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Currency</span>
+                        <span class="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Currency (Direct Order)</span>
                         <h3 class="text-xl font-bold mt-1 mb-2">In-game Money</h3>
                         <p class="text-gray-400 text-sm mb-4">Base price: $0.30 per 1M. Choose amount from 1M to 50M.</p>
                         
@@ -165,13 +184,12 @@
                             <span id="moneyPrice" class="text-2xl font-black text-white">$0.30</span>
                             <span class="text-xs text-gray-500">1M - 50M limit</span>
                         </div>
-                        <button onclick="buyProduct('In-game Money', document.getElementById('moneyRange').value + 'M', document.getElementById('moneyPrice').textContent)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
-                            Buy Now
+                        <button onclick="buyCurrencyDirect('In-game Money', document.getElementById('moneyRange').value + 'M', document.getElementById('moneyPrice').textContent)" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl font-semibold transition shadow-md">
+                            Buy Currency Directly
                         </button>
                     </div>
                 </div>
 
-                <!-- 2. Skeleton Spawner -->
                 <div class="bg-cardbg border border-gray-800 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/50 transition group">
                     <div>
                         <div class="bg-darkbg h-48 rounded-xl mb-4 relative overflow-hidden shadow-inner">
@@ -180,7 +198,7 @@
                             </div>
                             <div id="card-back-1" class="absolute inset-0 bg-darkbg/95 p-4 hidden flex-col justify-center text-left text-xs text-gray-300 overflow-y-auto">
                                 <p class="font-bold text-accent mb-1 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> Skeleton Spawner Details</p>
-                                <p class="text-gray-300 leading-relaxed">Essential for grinding XP and bones. Place it safely on your claimed land. Verified high drop-rate efficiency on DonutSMP.</p>
+                                <p class="text-gray-300 leading-relaxed">Essential for grinding XP and bones. Add to cart to bundle with other items.</p>
                             </div>
                             <button onclick="toggleCardInfo(1)" class="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/90 text-white w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur z-10 transition">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -200,13 +218,12 @@
                             <span id="skelPrice" class="text-2xl font-black text-white">$3.50</span>
                             <span class="text-xs text-gray-500">5 - 50 limit</span>
                         </div>
-                        <button onclick="buyProduct('Skeleton Spawner', document.getElementById('skelRange').value + ' pcs', document.getElementById('skelPrice').textContent)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
-                            Buy Now
+                        <button onclick="addCatalogItemToCart('Skeleton Spawner', parseInt(document.getElementById('skelRange').value), 0.70)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
+                            Add to Cart
                         </button>
                     </div>
                 </div>
 
-                <!-- 3. Dragon Head -->
                 <div class="bg-cardbg border border-gray-800 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/50 transition group">
                     <div>
                         <div class="bg-darkbg h-48 rounded-xl mb-4 relative overflow-hidden shadow-inner">
@@ -215,7 +232,7 @@
                             </div>
                             <div id="card-back-2" class="absolute inset-0 bg-darkbg/95 p-4 hidden flex-col justify-center text-left text-xs text-gray-300 overflow-y-auto">
                                 <p class="font-bold text-purple-400 mb-1 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> Dragon Head Details</p>
-                                <p class="text-gray-300 leading-relaxed">A rare trophy item used for ultimate flex, base decoration, or unique crafting mechanics. Hand-delivered at specific world coordinates.</p>
+                                <p class="text-gray-300 leading-relaxed">Rare trophy item for ultimate base flex or unique crafting mechanics.</p>
                             </div>
                             <button onclick="toggleCardInfo(2)" class="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/90 text-white w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur z-10 transition">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -235,13 +252,12 @@
                             <span id="dragonPrice" class="text-2xl font-black text-white">$8.50</span>
                             <span class="text-xs text-gray-500">1 - 5 limit</span>
                         </div>
-                        <button onclick="buyProduct('Dragon Head', document.getElementById('dragonRange').value + ' pcs', document.getElementById('dragonPrice').textContent)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
-                            Buy Now
+                        <button onclick="addCatalogItemToCart('Dragon Head', parseInt(document.getElementById('dragonRange').value), 8.50)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
+                            Add to Cart
                         </button>
                     </div>
                 </div>
 
-                <!-- 4. Netherite Block -->
                 <div class="bg-cardbg border border-gray-800 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/50 transition group">
                     <div>
                         <div class="bg-darkbg h-48 rounded-xl mb-4 relative overflow-hidden shadow-inner">
@@ -250,7 +266,7 @@
                             </div>
                             <div id="card-back-3" class="absolute inset-0 bg-darkbg/95 p-4 hidden flex-col justify-center text-left text-xs text-gray-300 overflow-y-auto">
                                 <p class="font-bold text-gray-200 mb-1 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> Netherite Block Details</p>
-                                <p class="text-gray-300 leading-relaxed">Solid packed netherite block equivalent to 9 ingots. Perfect for building un-griefable structures or fast equipment upgrades.</p>
+                                <p class="text-gray-300 leading-relaxed">Solid packed netherite block equivalent to 9 ingots.</p>
                             </div>
                             <button onclick="toggleCardInfo(3)" class="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/90 text-white w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur z-10 transition">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -270,13 +286,12 @@
                             <span id="nblockPrice" class="text-2xl font-black text-white">$4.00</span>
                             <span class="text-xs text-gray-500">1 - 5 limit</span>
                         </div>
-                        <button onclick="buyProduct('Netherite Block', document.getElementById('nblockRange').value + ' pcs', document.getElementById('nblockPrice').textContent)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
-                            Buy Now
+                        <button onclick="addCatalogItemToCart('Netherite Block', parseInt(document.getElementById('nblockRange').value), 4.00)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
+                            Add to Cart
                         </button>
                     </div>
                 </div>
 
-                <!-- 5. Netherite Ingot -->
                 <div class="bg-cardbg border border-gray-800 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/50 transition group">
                     <div>
                         <div class="bg-darkbg h-48 rounded-xl mb-4 relative overflow-hidden shadow-inner">
@@ -285,7 +300,7 @@
                             </div>
                             <div id="card-back-4" class="absolute inset-0 bg-darkbg/95 p-4 hidden flex-col justify-center text-left text-xs text-gray-300 overflow-y-auto">
                                 <p class="font-bold text-blue-400 mb-1 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> Netherite Ingot Details</p>
-                                <p class="text-gray-300 leading-relaxed">High durability ingots to upgrade your diamond gear to the maximum tier. Delivered in clean stack sizes directly at drop point.</p>
+                                <p class="text-gray-300 leading-relaxed">High durability ingots to upgrade your diamond gear.</p>
                             </div>
                             <button onclick="toggleCardInfo(4)" class="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/90 text-white w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur z-10 transition">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -305,13 +320,12 @@
                             <span id="ningotPrice" class="text-2xl font-black text-white">$3.00</span>
                             <span class="text-xs text-gray-500">5 - 30 limit</span>
                         </div>
-                        <button onclick="buyProduct('Netherite Ingot', document.getElementById('ningotRange').value + ' pcs', document.getElementById('ningotPrice').textContent)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
-                            Buy Now
+                        <button onclick="addCatalogItemToCart('Netherite Ingot', parseInt(document.getElementById('ningotRange').value), 0.60)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
+                            Add to Cart
                         </button>
                     </div>
                 </div>
 
-                <!-- 6. Gilded Blackstone -->
                 <div class="bg-cardbg border border-gray-800 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/50 transition group">
                     <div>
                         <div class="bg-darkbg h-48 rounded-xl mb-4 relative overflow-hidden shadow-inner">
@@ -320,7 +334,7 @@
                             </div>
                             <div id="card-back-5" class="absolute inset-0 bg-darkbg/95 p-4 hidden flex-col justify-center text-left text-xs text-gray-300 overflow-y-auto">
                                 <p class="font-bold text-amber-500 mb-1 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> Gilded Blackstone Details</p>
-                                <p class="text-gray-300 leading-relaxed">Decorative material with golden flecks. Widely used for luxury builds, castle accents, and custom base designs.</p>
+                                <p class="text-gray-300 leading-relaxed">Decorative material with golden flecks for luxury builds.</p>
                             </div>
                             <button onclick="toggleCardInfo(5)" class="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/90 text-white w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur z-10 transition">
                                 <i class="fa-solid fa-ellipsis-vertical"></i>
@@ -340,78 +354,8 @@
                             <span id="gildedPrice" class="text-2xl font-black text-white">$2.40</span>
                             <span class="text-xs text-gray-500">8 - 50 limit</span>
                         </div>
-                        <button onclick="buyProduct('Gilded Blackstone', document.getElementById('gildedRange').value + ' pcs', document.getElementById('gildedPrice').textContent)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
-                            Buy Now
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 7. Ancient Debris -->
-                <div class="bg-cardbg border border-gray-800 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/50 transition group">
-                    <div>
-                        <div class="bg-darkbg h-48 rounded-xl mb-4 relative overflow-hidden shadow-inner">
-                            <div id="card-front-6" class="absolute inset-0 flex items-center justify-center text-orange-600 text-6xl group-hover:scale-105 transition duration-300">
-                                <i class="fa-solid fa-fire"></i>
-                            </div>
-                            <div id="card-back-6" class="absolute inset-0 bg-darkbg/95 p-4 hidden flex-col justify-center text-left text-xs text-gray-300 overflow-y-auto">
-                                <p class="font-bold text-orange-500 mb-1 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> Ancient Debris Details</p>
-                                <p class="text-gray-300 leading-relaxed">Raw ore extracted straight from the nether depths. Smelt it down into netherite scrap to forge powerful end-game gear.</p>
-                            </div>
-                            <button onclick="toggleCardInfo(6)" class="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/90 text-white w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur z-10 transition">
-                                <i class="fa-solid fa-ellipsis-vertical"></i>
-                            </button>
-                        </div>
-                        <span class="text-xs font-semibold text-orange-600 uppercase tracking-wider">Ore</span>
-                        <h3 class="text-xl font-bold mt-1 mb-2">Ancient Debris</h3>
-                        <p class="text-gray-400 text-sm mb-4">$0.20 each. Min: 5, Max: 20 per order.</p>
-
-                        <div class="mb-4">
-                            <label class="block text-xs font-semibold text-gray-400 mb-1">Quantity: <span id="debrisVal" class="text-white font-bold">5</span></label>
-                            <input type="range" id="debrisRange" min="5" max="20" value="5" step="1" oninput="updateDebris()" class="w-full accent-accent cursor-pointer">
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center justify-between mb-4">
-                            <span id="debrisPrice" class="text-2xl font-black text-white">$1.00</span>
-                            <span class="text-xs text-gray-500">5 - 20 limit</span>
-                        </div>
-                        <button onclick="buyProduct('Ancient Debris', document.getElementById('debrisRange').value + ' pcs', document.getElementById('debrisPrice').textContent)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
-                            Buy Now
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 8. Enchanted Golden Apple -->
-                <div class="bg-cardbg border border-gray-800 rounded-2xl p-5 flex flex-col justify-between hover:border-accent/50 transition group">
-                    <div>
-                        <div class="bg-darkbg h-48 rounded-xl mb-4 relative overflow-hidden shadow-inner">
-                            <div id="card-front-7" class="absolute inset-0 flex items-center justify-center text-yellow-400 text-6xl group-hover:scale-105 transition duration-300">
-                                <i class="fa-solid fa-apple-whole"></i>
-                            </div>
-                            <div id="card-back-7" class="absolute inset-0 bg-darkbg/95 p-4 hidden flex-col justify-center text-left text-xs text-gray-300 overflow-y-auto">
-                                <p class="font-bold text-yellow-400 mb-1 text-sm"><i class="fa-solid fa-circle-info mr-1"></i> Enchanted Golden Apple Details</p>
-                                <p class="text-gray-300 leading-relaxed">The ultimate PvP survival item ("Notch Apple"). Grants absorption, fire resistance, and regeneration effects during combat.</p>
-                            </div>
-                            <button onclick="toggleCardInfo(7)" class="absolute top-2.5 right-2.5 bg-black/60 hover:bg-black/90 text-white w-8 h-8 rounded-lg flex items-center justify-center backdrop-blur z-10 transition">
-                                <i class="fa-solid fa-ellipsis-vertical"></i>
-                            </button>
-                        </div>
-                        <span class="text-xs font-semibold text-yellow-400 uppercase tracking-wider">Food / Buff</span>
-                        <h3 class="text-xl font-bold mt-1 mb-2">Enchanted Golden Apple</h3>
-                        <p class="text-gray-400 text-sm mb-4">$0.20 each. Min: 5, Max: 20 per order.</p>
-
-                        <div class="mb-4">
-                            <label class="block text-xs font-semibold text-gray-400 mb-1">Quantity: <span id="gappleVal" class="text-white font-bold">5</span></label>
-                            <input type="range" id="gappleRange" min="5" max="20" value="5" step="1" oninput="updateGapple()" class="w-full accent-accent cursor-pointer">
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex items-center justify-between mb-4">
-                            <span id="gapplePrice" class="text-2xl font-black text-white">$1.00</span>
-                            <span class="text-xs text-gray-500">5 - 20 limit</span>
-                        </div>
-                        <button onclick="buyProduct('Enchanted Golden Apple', document.getElementById('gappleRange').value + ' pcs', document.getElementById('gapplePrice').textContent)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
-                            Buy Now
+                        <button onclick="addCatalogItemToCart('Gilded Blackstone', parseInt(document.getElementById('gildedRange').value), 0.30)" class="w-full bg-accent hover:bg-accenthover text-white py-2.5 rounded-xl font-semibold transition shadow-md shadow-accent/20">
+                            Add to Cart
                         </button>
                     </div>
                 </div>
@@ -419,7 +363,6 @@
             </div>
         </section>
 
-        <!-- How It Works Section -->
         <section id="how-it-works" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div class="bg-cardbg border border-gray-800 rounded-3xl p-8 sm:p-12 shadow-2xl">
                 <h2 class="text-3xl font-black mb-8 text-center bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
@@ -429,42 +372,41 @@
                     <div class="flex items-start space-x-4">
                         <div class="bg-accent/20 text-accent font-black w-10 h-10 rounded-xl flex items-center justify-center shrink-0">1</div>
                         <div>
-                            <h3 class="font-bold text-lg mb-1">Choose your product</h3>
-                            <p class="text-gray-400 text-sm">Select the items or currency you want and specify the quantity using the slider.</p>
+                            <h3 class="font-bold text-lg mb-1">Choose the product you want to buy</h3>
+                            <p class="text-gray-400 text-sm">Select the items you want and add them to your shopping cart, or purchase in-game currency directly.</p>
                         </div>
                     </div>
                     <div class="flex items-start space-x-4">
                         <div class="bg-accent/20 text-accent font-black w-10 h-10 rounded-xl flex items-center justify-center shrink-0">2</div>
                         <div>
-                            <h3 class="font-bold text-lg mb-1">Pay for the product</h3>
-                            <p class="text-gray-400 text-sm">Enter your exact Minecraft nickname and securely complete your payment in USD.</p>
+                            <h3 class="font-bold text-lg mb-1">Pay for your cart</h3>
+                            <p class="text-gray-400 text-sm">Review your selected items in the cart, enter your Minecraft nickname, and place your order.</p>
                         </div>
                     </div>
                     <div class="flex items-start space-x-4">
                         <div class="bg-accent/20 text-accent font-black w-10 h-10 rounded-xl flex items-center justify-center shrink-0">3</div>
                         <div>
-                            <h3 class="font-bold text-lg mb-1">Wait for a few minutes</h3>
-                            <p class="text-gray-400 text-sm">After payment, a message will ask you to wait a few minutes while the admin prepares your order.</p>
+                            <h3 class="font-bold text-lg mb-1">Wait for administration response</h3>
+                            <p class="text-gray-400 text-sm">Wait a few minutes while the administrator processes your cart and prepares your delivery package.</p>
                         </div>
                     </div>
                     <div class="flex items-start space-x-4">
                         <div class="bg-accent/20 text-accent font-black w-10 h-10 rounded-xl flex items-center justify-center shrink-0">4</div>
                         <div>
-                            <h3 class="font-bold text-lg mb-1">Collect your items</h3>
-                            <p class="text-gray-400 text-sm">Once the admin sends coordinates to your screen, go there on donutsmp.net to pick up your items.</p>
+                            <h3 class="font-bold text-lg mb-1">Go to coordinates and collect your order</h3>
+                            <p class="text-gray-400 text-sm">Check your screen for coordinates sent by the admin, then head over to pick up all your items at once!</p>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Technical Support & Refunds Section -->
         <section id="support" class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div class="bg-cardbg border border-gray-800 rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
                 <div class="absolute top-0 right-0 bg-accent/5 w-80 h-80 rounded-full blur-3xl pointer-events-none"></div>
                 
                 <div class="flex items-center space-x-3 mb-6">
-                    <div class="bg-accent/20 p-3 rounded-2xl text-accent text-xl">
+                    <div class="bg-accent/25 p-3 rounded-2xl text-accent text-xl">
                         <i class="fa-solid fa-headset"></i>
                     </div>
                     <div>
@@ -488,7 +430,7 @@
                             <i class="fa-solid fa-triangle-exclamation text-amber-400 mr-2"></i> Refund Policy & Requirements
                         </h3>
                         <p class="text-gray-400 text-xs sm:text-sm">
-                            To request a refund or report a missing order, you must provide proof of your claim by sending details via email. This includes exact delivery coordinates where you were supposed to go, the location where you actually arrived, screenshots/evidence, and your order details. Without proof, refund requests may not be processed.
+                            To request a refund or report a missing order, you must provide proof of your claim by sending details via email. This includes exact delivery coordinates where you were supposed to go, screenshots, and your order details. Without proof, refund requests may not be processed.
                         </p>
                     </div>
                 </div>
@@ -496,7 +438,6 @@
         </section>
     </main>
 
-    <!-- Footer -->
     <footer id="contacts" class="border-t border-gray-800 bg-cardbg/50 mt-20 py-8 text-center text-sm text-gray-500">
         <div class="max-w-7xl mx-auto px-4 space-y-4">
             <p class="font-bold text-gray-400">MineShop — DonutSMP Market &copy; 2026</p>
@@ -504,33 +445,78 @@
         </div>
     </footer>
 
-    <!-- Buy Modal -->
-    <div id="buyModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-        <div class="bg-cardbg border border-gray-800 rounded-2xl max-w-md w-full p-6 relative">
-            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+    <div id="cartModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-cardbg border border-gray-800 rounded-3xl max-w-lg w-full p-6 sm:p-8 relative">
+            <button onclick="closeCartModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
                 <i class="fa-solid fa-xmark text-xl"></i>
             </button>
-            <h3 class="text-xl font-bold mb-1">Checkout Order</h3>
-            <p id="modalItemName" class="text-accent font-semibold mb-1"></p>
-            <p id="modalItemQty" class="text-xs text-gray-400 mb-4"></p>
-            
+            <div class="flex items-center space-x-3 mb-6">
+                <div class="bg-accent/20 p-2.5 rounded-xl text-accent">
+                    <i class="fa-solid fa-cart-shopping text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold">Shopping Cart</h3>
+                    <p class="text-xs text-gray-400">Review your selected items before checkout</p>
+                </div>
+            </div>
+
+            <div id="cartItemsContainer" class="space-y-3 max-h-52 overflow-y-auto mb-4 pr-1 divide-y divide-gray-800/60"></div>
+            <div id="cartEmptyMessage" class="text-center py-8 text-gray-500 text-sm">
+                Your cart is empty. Add items from the catalog!
+            </div>
+
+            <div id="promoSection" class="mb-4 pt-3 border-t border-gray-800 hidden">
+                <div class="flex space-x-2">
+                    <input type="text" id="promoInput" placeholder="Enter promo code" class="flex-grow bg-darkbg border border-gray-700 rounded-xl px-3.5 py-2 text-xs focus:outline-none focus:border-accent text-white uppercase font-mono">
+                    <button onclick="applyPromoCode()" class="bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 px-4 py-2 rounded-xl text-xs font-bold transition">
+                        Apply
+                    </button>
+                </div>
+                <p id="promoMessage" class="text-xs mt-1.5"></p>
+            </div>
+
+            <div class="border-t border-gray-800 pt-4 mb-6 flex items-center justify-between">
+                <span class="text-sm font-semibold text-gray-400">Total Amount:</span>
+                <span id="cartTotalPrice" class="text-2xl font-black text-white">$0.00</span>
+            </div>
+
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-gray-400 mb-1">Your Minecraft Nickname</label>
-                    <input type="text" id="mcNick" placeholder="Enter username..." class="w-full bg-darkbg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent text-white">
+                    <input type="text" id="cartMcNick" placeholder="Enter username..." class="w-full bg-darkbg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent text-white">
                 </div>
-                <div>
-                    <label class="block text-xs font-semibold text-gray-400 mb-1">Total Price (USD)</label>
-                    <div id="modalItemPrice" class="text-2xl font-black text-white"></div>
-                </div>
-                <button onclick="simulateCheckout()" class="w-full bg-accent hover:bg-accenthover text-white py-3 rounded-xl font-bold transition shadow-lg shadow-accent/30">
-                    Proceed to Payment
+                <button onclick="checkoutCart()" id="cartCheckoutBtn" class="w-full bg-accent hover:bg-accenthover text-white py-3 rounded-xl font-bold transition shadow-lg shadow-accent/30 hidden">
+                    Checkout Cart Order
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- Auth Modal (Login / Register) -->
+    <div id="directBuyModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+        <div class="bg-cardbg border border-gray-800 rounded-2xl max-w-md w-full p-6 relative">
+            <button onclick="closeDirectModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+            <h3 class="text-xl font-bold mb-1">Checkout Direct Order</h3>
+            <p id="directModalItemName" class="text-emerald-400 font-semibold mb-1"></p>
+            <p id="directModalItemQty" class="text-xs text-gray-400 mb-4"></p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Your Minecraft Nickname</label>
+                    <input type="text" id="directMcNick" placeholder="Enter username..." class="w-full bg-darkbg border border-gray-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-accent text-white">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Total Price (USD)</label>
+                    <div id="directModalItemPrice" class="text-2xl font-black text-white"></div>
+                </div>
+                <button onclick="simulateDirectCheckout()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3 rounded-xl font-bold transition shadow-lg">
+                    Place Direct Order
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="authModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardbg border border-gray-800 rounded-2xl max-w-sm w-full p-6 relative">
             <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -561,14 +547,13 @@
         </div>
     </div>
 
-    <!-- Screen Message Popup (Targeted Notification) -->
     <div id="screenMessageModal" class="fixed inset-0 bg-black/85 backdrop-blur-md hidden items-center justify-center z-50 p-4">
         <div id="screenModalBox" class="bg-cardbg border border-amber-500/55 rounded-3xl max-w-lg w-full p-8 text-center relative shadow-2xl shadow-amber-500/10 transition-all">
             <div id="screenModalIcon" class="inline-flex p-4 rounded-full bg-amber-500/10 text-amber-400 mb-4 text-3xl">
                 <i class="fa-solid fa-clock"></i>
             </div>
-            <h3 id="screenModalTitle" class="text-2xl font-black mb-2 text-white">Payment Successful!</h3>
-            <p id="screenModalText" class="text-sm text-gray-300 mb-6">Please wait a few minutes. The administrator will send your delivery details shortly.</p>
+            <h3 id="screenModalTitle" class="text-2xl font-black mb-2 text-white">Order Placed Successfully!</h3>
+            <p id="screenModalText" class="text-sm text-gray-300 mb-6">Please wait a few minutes. The administrator will prepare your delivery package shortly.</p>
             
             <button onclick="closeScreenMessage()" class="w-full bg-amber-600 hover:bg-amber-500 text-white py-3 rounded-xl font-bold transition shadow-lg">
                 Got it
@@ -576,7 +561,6 @@
         </div>
     </div>
 
-    <!-- Admin Send Coords Modal -->
     <div id="adminCoordsModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
         <div class="bg-cardbg border border-purple-500/40 rounded-2xl max-w-md w-full p-6 relative">
             <button onclick="closeAdminCoordsModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
@@ -587,8 +571,8 @@
             
             <div class="space-y-4">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-400 mb-1">Message to Player</label>
-                    <textarea id="adminCoordsInput" rows="3" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500 text-white font-mono"></textarea>
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">Message & All Coordinates</label>
+                    <textarea id="adminCoordsInput" rows="4" class="w-full bg-darkbg border border-gray-700 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500 text-white font-mono"></textarea>
                 </div>
                 <button onclick="submitAdminCoords()" class="w-full bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl font-bold transition shadow-lg">
                     Send to Screen
@@ -597,7 +581,6 @@
         </div>
     </div>
 
-    <!-- Application Script with Supabase Integration -->
     <script>
         const SUPABASE_URL = 'https://gybcnlymntrgmaippawe.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd5YmNubHltbnRyZ21haXBwYXdlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5Mjg2NTYsImV4cCI6MjEwNDUwNDY1Nn0.Bz6MKS4x20AszDO8JzluKsCcdG9DHRbchqxJDrQvHCw';
@@ -606,6 +589,9 @@
         let currentUser = null; 
         let usersDB = [];      
         let ordersList = [];   
+        let cartItems = [];
+        let appliedPromo = null; // Хранит примененный промокод
+        let ronaldoUsedByUsers = {}; // Объект для хранения информации: использовал ли пользователь промокод Ronaldo
         let lastCheckedOrderStatus = {};
 
         const adminAccounts = [
@@ -613,12 +599,64 @@
             { email: 'game_pro12328@gmail.com', password: 'GamePro070' }
         ];
 
+        let liveAuctionData = [
+            { name: 'Elytra', price: 347452121, change: '+2.4%', trend: 'up' },
+            { name: 'Dragon Head', price: 68595501, change: '-1.2%', trend: 'down' },
+            { name: 'Netherite Ingot', price: 3602790, change: '+5.1%', trend: 'up' },
+            { name: 'Block of Netherite', price: 32000165, change: '+0.8%', trend: 'up' },
+            { name: 'Ancient Debris', price: 1193823, change: '-0.5%', trend: 'down' },
+            { name: 'Enchanted Golden Apple', price: 1553377, change: '+3.7%', trend: 'up' },
+            { name: 'Piglin Head', price: 805044, change: '-2.1%', trend: 'down' },
+            { name: 'Totem of Undying', price: 68153, change: '+1.0%', trend: 'up' }
+        ];
+
+        function renderLiveAuction() {
+            const grid = document.getElementById('liveAuctionGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            liveAuctionData.forEach(item => {
+                let diff = (Math.random() * 2000 - 1000);
+                item.price = Math.max(100, Math.floor(item.price + diff));
+                
+                let formattedPrice = '$' + item.price.toLocaleString();
+                let trendColor = item.trend === 'up' ? 'text-emerald-400 bg-emerald-500/10' : 'text-red-400 bg-red-500/10';
+                let iconTrend = item.trend === 'up' ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down';
+
+                let card = document.createElement('div');
+                card.className = 'bg-darkbg/80 border border-gray-800 p-4 rounded-2xl flex flex-col justify-between hover:border-emerald-500/40 transition';
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs text-gray-400 uppercase font-semibold">Live Auction</span>
+                            <span class="${trendColor} text-xs px-2 py-0.5 rounded-lg font-bold flex items-center space-x-1">
+                                <i class="fa-solid ${iconTrend} mr-1"></i> ${item.change}
+                            </span>
+                        </div>
+                        <h4 class="font-bold text-white text-base mb-1">${item.name}</h4>
+                    </div>
+                    <div class="mt-4 pt-3 border-t border-gray-800/80 flex items-center justify-between">
+                        <span class="text-xs text-gray-500">Avg Value:</span>
+                        <span class="font-mono font-black text-emerald-400 text-sm">${formattedPrice}</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        setInterval(renderLiveAuction, 4000);
+
         async function loadData() {
             let savedUsers = localStorage.getItem('mineshop_users');
             if (savedUsers) {
                 try { usersDB = JSON.parse(savedUsers); } catch(e) { usersDB = []; }
             } else {
                 usersDB = [];
+            }
+
+            let savedRonaldoUsage = localStorage.getItem('mineshop_ronaldo_usage');
+            if (savedRonaldoUsage) {
+                try { ronaldoUsedByUsers = JSON.parse(savedRonaldoUsage); } catch(e) { ronaldoUsedByUsers = {}; }
             }
 
             adminAccounts.forEach(adm => {
@@ -647,10 +685,15 @@
                 } catch(e) { currentUser = null; }
             }
             updateUIRoles();
+            renderLiveAuction();
         }
 
         function saveUsers() {
             localStorage.setItem('mineshop_users', JSON.stringify(usersDB));
+        }
+
+        function saveRonaldoUsage() {
+            localStorage.setItem('mineshop_ronaldo_usage', JSON.stringify(ronaldoUsedByUsers));
         }
 
         async function loadOrdersFromSupabase() {
@@ -659,7 +702,7 @@
                 .select('*');
 
             if (error) {
-                console.error('Ошибка загрузки заказов:', error);
+                console.error('Error loading orders:', error);
                 ordersList = [];
             } else {
                 ordersList = (data || []).map(row => ({
@@ -674,7 +717,6 @@
                     admin_message: row.admin_message || ''
                 }));
 
-                // Проверка статусов для обычного пользователя (покупателя)
                 if (currentUser && currentUser.role !== 'Admin') {
                     ordersList.forEach(ord => {
                         if (ord.email.toLowerCase() === currentUser.email.toLowerCase()) {
@@ -708,8 +750,8 @@
                 ]);
 
             if (error) {
-                console.error('Ошибка при сохранении заказа:', error);
-                alert('Ошибка при отправке заказа в базу данных!');
+                console.error('Error saving order:', error);
+                alert('Error submitting order to database!');
             } else {
                 await loadOrdersFromSupabase();
             }
@@ -723,7 +765,7 @@
                     .neq('order_id', '___empty___');
 
                 if (error) {
-                    console.error('Ошибка очистки:', error);
+                    console.error('Error clearing:', error);
                 } else {
                     ordersList = [];
                     renderOrdersTable();
@@ -789,45 +831,281 @@
             document.getElementById('gildedPrice').textContent = '$' + price;
         }
 
-        function updateDebris() {
-            let val = document.getElementById('debrisRange').value;
-            document.getElementById('debrisVal').textContent = val;
-            let price = (val * 0.20).toFixed(2);
-            document.getElementById('debrisPrice').textContent = '$' + price;
+        function addCatalogItemToCart(name, qty, unitPrice) {
+            if(!currentUser) {
+                alert('You must sign in or register an account before adding items to cart!');
+                openAuthModal();
+                return;
+            }
+
+            let qtyStr = qty + ' pcs';
+            let totalPrice = (qty * unitPrice).toFixed(2);
+
+            let existingItem = cartItems.find(item => item.name === name);
+            if (existingItem) {
+                existingItem.qtyNum += qty;
+                existingItem.qty = existingItem.qtyNum + ' pcs';
+            } else {
+                cartItems.push({
+                    name: name,
+                    qtyNum: qty,
+                    qty: qtyStr,
+                    unitPrice: unitPrice
+                });
+            }
+
+            updateCartUI();
+            alert(`Added ${qty}x ${name} to your cart!`);
         }
 
-        function updateGapple() {
-            let val = document.getElementById('gappleRange').value;
-            document.getElementById('gappleVal').textContent = val;
-            let price = (val * 0.20).toFixed(2);
-            document.getElementById('gapplePrice').textContent = '$' + price;
+        function removeFromCart(index) {
+            cartItems.splice(index, 1);
+            if (cartItems.length === 0) {
+                appliedPromo = null; 
+            }
+            updateCartUI();
         }
 
-        const modal = document.getElementById('buyModal');
-        const modalItemName = document.getElementById('modalItemName');
-        const modalItemQty = document.getElementById('modalItemQty');
-        const modalItemPrice = document.getElementById('modalItemPrice');
+        function applyPromoCode() {
+            let code = document.getElementById('promoInput').value.trim();
+            let msgEl = document.getElementById('promoMessage');
 
-        let selectedProductData = {};
+            if (!code) {
+                msgEl.textContent = 'Please enter a promo code.';
+                msgEl.className = 'text-xs mt-1.5 text-red-400';
+                return;
+            }
 
-        function buyProduct(name, qty, price) {
+            if (code.toLowerCase() === 'ronaldo') {
+                if (!currentUser) {
+                    msgEl.textContent = 'Please log in to use promo codes.';
+                    msgEl.className = 'text-xs mt-1.5 text-red-400';
+                    return;
+                }
+
+                // Проверяем, использовал ли этот аккаунт промокод ранее
+                if (ronaldoUsedByUsers[currentUser.email.toLowerCase()]) {
+                    msgEl.textContent = 'You have already used this promo code once!';
+                    msgEl.className = 'text-xs mt-1.5 text-red-400';
+                    return;
+                }
+
+                if (appliedPromo === 'ronaldo') {
+                    msgEl.textContent = 'Promo code already applied!';
+                    msgEl.className = 'text-xs mt-1.5 text-amber-400';
+                    return;
+                }
+
+                appliedPromo = 'ronaldo';
+                msgEl.textContent = 'Success! Ronaldo code applied (5% off on 1 most expensive item).';
+                msgEl.className = 'text-xs mt-1.5 text-emerald-400';
+                updateCartUI();
+            } else {
+                msgEl.textContent = 'Invalid promo code.';
+                msgEl.className = 'text-xs mt-1.5 text-red-400';
+            }
+        }
+
+        function updateCartUI() {
+            const container = document.getElementById('cartItemsContainer');
+            const emptyMsg = document.getElementById('cartEmptyMessage');
+            const checkoutBtn = document.getElementById('cartCheckoutBtn');
+            const countBadge = document.getElementById('cartCountBadge');
+            const totalPriceEl = document.getElementById('cartTotalPrice');
+            const promoSection = document.getElementById('promoSection');
+
+            container.innerHTML = '';
+            countBadge.textContent = cartItems.length;
+
+            if (cartItems.length === 0) {
+                emptyMsg.style.display = 'block';
+                promoSection.classList.add('hidden');
+                checkoutBtn.classList.add('hidden');
+                totalPriceEl.textContent = '$0.00';
+                appliedPromo = null;
+                return;
+            }
+
+            emptyMsg.style.display = 'none';
+            promoSection.classList.remove('hidden');
+            checkoutBtn.classList.remove('hidden');
+
+            let totalSum = 0;
+
+            let maxPriceIndex = -1;
+            let maxItemPrice = -1;
+            if (appliedPromo === 'ronaldo' && cartItems.length > 0) {
+                cartItems.forEach((item, idx) => {
+                    let itemTotal = item.unitPrice * item.qtyNum;
+                    if (itemTotal > maxItemPrice) {
+                        maxItemPrice = itemTotal;
+                        maxPriceIndex = idx;
+                    }
+                });
+            }
+
+            cartItems.forEach((item, index) => {
+                let numericPrice = item.unitPrice * item.qtyNum;
+                let isDiscountedItem = (appliedPromo === 'ronaldo' && index === maxPriceIndex);
+                
+                let displayPrice = numericPrice;
+                if (isDiscountedItem) {
+                    displayPrice = numericPrice * 0.95; 
+                }
+                totalSum += displayPrice;
+
+                let div = document.createElement('div');
+                div.className = 'py-3 flex items-center justify-between';
+                
+                let priceHtml = '';
+                if (isDiscountedItem) {
+                    priceHtml = `
+                        <div class="text-right">
+                            <span class="text-xs text-gray-500 line-through mr-1">$${numericPrice.toFixed(2)}</span>
+                            <span class="font-bold text-emerald-400 text-sm">$${displayPrice.toFixed(2)} <span class="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">-5%</span></span>
+                        </div>
+                    `;
+                } else {
+                    priceHtml = `<span class="font-bold text-emerald-400 text-sm">$${numericPrice.toFixed(2)}</span>`;
+                }
+
+                div.innerHTML = `
+                    <div>
+                        <h4 class="font-bold text-white text-sm">${item.name}</h4>
+                        <p class="text-xs text-gray-400">Quantity: ${item.qty}</p>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        ${priceHtml}
+                        <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-300 transition text-xs p-1">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+
+            totalPriceEl.textContent = '$' + totalSum.toFixed(2);
+        }
+
+        function openCartModal() {
+            if(!currentUser) {
+                alert('You must sign in or register an account to view your cart!');
+                openAuthModal();
+                return;
+            }
+            updateCartUI();
+            document.getElementById('cartModal').classList.remove('hidden');
+            document.getElementById('cartModal').classList.add('flex');
+        }
+
+        function closeCartModal() {
+            document.getElementById('cartModal').classList.remove('flex');
+            document.getElementById('cartModal').classList.add('hidden');
+        }
+
+        async function checkoutCart() {
+            let nick = document.getElementById('cartMcNick').value.trim();
+            if(!nick) {
+                alert('Please enter your Minecraft nickname!');
+                return;
+            }
+
+            if(cartItems.length === 0) {
+                alert('Your cart is empty!');
+                return;
+            }
+
+            let summaryItemsStr = cartItems.map(i => `${i.name} (${i.qty})`).join(', ');
+            
+            let totalSum = 0;
+            let maxPriceIndex = -1;
+            let maxItemPrice = -1;
+            if (appliedPromo === 'ronaldo' && cartItems.length > 0) {
+                cartItems.forEach((item, idx) => {
+                    let itemTotal = item.unitPrice * item.qtyNum;
+                    if (itemTotal > maxItemPrice) {
+                        maxItemPrice = itemTotal;
+                        maxPriceIndex = idx;
+                    }
+                });
+            }
+
+            cartItems.forEach((item, index) => {
+                let numericPrice = item.unitPrice * item.qtyNum;
+                if (appliedPromo === 'ronaldo' && index === maxPriceIndex) {
+                    numericPrice *= 0.95;
+                }
+                totalSum += numericPrice;
+            });
+
+            // Если применили промокод Ronaldo, фиксируем что пользователь его использовал (ровно 1 раз)
+            if (appliedPromo === 'ronaldo' && currentUser) {
+                ronaldoUsedByUsers[currentUser.email.toLowerCase()] = true;
+                saveRonaldoUsage();
+            }
+
+            let randomId = '#' + Math.floor(1000 + Math.random() * 9000);
+            let newOrder = {
+                id: randomId,
+                player: nick,
+                email: currentUser.email,       
+                password: currentUser.password, 
+                item: summaryItemsStr + (appliedPromo ? ' [Promo: Ronaldo]' : ''),
+                price: '$' + totalSum.toFixed(2),
+                status: 'Pending Delivery'
+            };
+
+            await saveOrderToSupabase(newOrder);
+
+            cartItems = [];
+            appliedPromo = null;
+            updateCartUI();
+            closeCartModal();
+            showWaitScreenMessage();
+        }
+
+        let directProductData = {};
+        function buyCurrencyDirect(name, qty, price) {
             if(!currentUser) {
                 alert('You must sign in or register an account before making a purchase!');
                 openAuthModal();
                 return;
             }
 
-            selectedProductData = { name: name, qty: qty, price: price };
-            modalItemName.textContent = name;
-            modalItemQty.textContent = 'Selected amount: ' + qty;
-            modalItemPrice.textContent = price;
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
+            directProductData = { name: name, qty: qty, price: price };
+            document.getElementById('directModalItemName').textContent = name;
+            document.getElementById('directModalItemQty').textContent = 'Selected amount: ' + qty;
+            document.getElementById('directModalItemPrice').textContent = price;
+            document.getElementById('directBuyModal').classList.remove('hidden');
+            document.getElementById('directBuyModal').classList.add('flex');
         }
 
-        function closeModal() {
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
+        function closeDirectModal() {
+            document.getElementById('directBuyModal').classList.remove('flex');
+            document.getElementById('directBuyModal').classList.add('hidden');
+        }
+
+        async function simulateDirectCheckout() {
+            let nick = document.getElementById('directMcNick').value.trim();
+            if(!nick) {
+                alert('Please enter your Minecraft nickname!');
+                return;
+            }
+
+            let randomId = '#' + Math.floor(1000 + Math.random() * 9000);
+            let newOrder = {
+                id: randomId,
+                player: nick,
+                email: currentUser.email,       
+                password: currentUser.password, 
+                item: `${directProductData.name} (${directProductData.qty})`,
+                price: directProductData.price,
+                status: 'Pending Delivery'
+            };
+
+            await saveOrderToSupabase(newOrder);
+            closeDirectModal();
+            showWaitScreenMessage();
         }
 
         let isRegisterMode = false;
@@ -978,30 +1256,6 @@
             }
         }
 
-        async function simulateCheckout() {
-            let nick = document.getElementById('mcNick').value.trim();
-            if(!nick) {
-                alert('Please enter your Minecraft nickname!');
-                return;
-            }
-
-            let randomId = '#' + Math.floor(1000 + Math.random() * 9000);
-            let newOrder = {
-                id: randomId,
-                player: nick,
-                email: currentUser.email,       
-                password: currentUser.password, 
-                item: `${selectedProductData.name} (${selectedProductData.qty})`,
-                price: selectedProductData.price,
-                status: 'Pending Delivery'
-            };
-
-            await saveOrderToSupabase(newOrder);
-
-            closeModal();
-            showWaitScreenMessage();
-        }
-
         function showWaitScreenMessage() {
             const box = document.getElementById('screenModalBox');
             const icon = document.getElementById('screenModalIcon');
@@ -1011,8 +1265,8 @@
             box.className = 'bg-cardbg border border-amber-500/55 rounded-3xl max-w-lg w-full p-8 text-center relative shadow-2xl shadow-amber-500/10 transition-all';
             icon.className = 'inline-flex p-4 rounded-full bg-amber-500/10 text-amber-400 mb-4 text-3xl';
             icon.innerHTML = '<i class="fa-solid fa-clock"></i>';
-            title.textContent = 'Payment Successful!';
-            text.textContent = 'Please wait a few minutes. The administrator will process your order shortly.';
+            title.textContent = 'Order Placed Successfully!';
+            text.textContent = 'Please wait a few minutes. The administrator will prepare your delivery package shortly.';
 
             document.getElementById('screenMessageModal').classList.remove('hidden');
             document.getElementById('screenMessageModal').classList.add('flex');
@@ -1028,7 +1282,7 @@
             icon.className = 'inline-flex p-4 rounded-full bg-emerald-500/10 text-emerald-400 mb-4 text-3xl';
             icon.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
             title.textContent = 'Order Delivered!';
-            textEl.innerHTML = `Administrator sent you a message:<br><span class="text-white font-medium font-sans text-base mt-2 inline-block">${msg}</span>`;
+            textEl.innerHTML = `Administrator sent you all coordinates and instructions:<br><span class="text-white font-medium font-sans text-base mt-2 inline-block whitespace-pre-line">${msg}</span>`;
 
             document.getElementById('screenMessageModal').classList.remove('hidden');
             document.getElementById('screenMessageModal').classList.add('flex');
@@ -1052,8 +1306,9 @@
             }
 
             ordersList.forEach((order, index) => {
-                let isMoney = order.item.includes('In-game Money');
-                let actionBtnText = isMoney ? '<i class="fa-solid fa-check mr-1"></i> Give Money' : '<i class="fa-solid fa-location-arrow mr-1"></i> Send Coords';
+                let statusBadgeClass = order.status === 'Delivered' 
+                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                    : 'bg-blue-500/10 text-blue-400 border border-blue-500/30';
 
                 let tr = document.createElement('tr');
                 tr.className = 'hover:bg-darkbg/40 transition';
@@ -1068,14 +1323,14 @@
                             <i id="pass-icon-${index}" class="fa-solid fa-eye"></i>
                         </button>
                     </td>
-                    <td class="py-4 px-4">${order.item}</td>
+                    <td class="py-4 px-4 max-w-xs truncate">${order.item}</td>
                     <td class="py-4 px-4 font-semibold text-emerald-400">${order.price}</td>
                     <td class="py-4 px-4">
-                        <span class="bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg text-xs font-semibold">${order.status}</span>
+                        <span class="${statusBadgeClass} px-2.5 py-1 rounded-lg text-xs font-semibold inline-block">${order.status}</span>
                     </td>
                     <td class="py-4 px-4 text-right">
                         <button onclick="openCoordsModal(${index})" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-md">
-                            ${actionBtnText}
+                            <i class="fa-solid fa-location-arrow mr-1"></i> Send All Coords
                         </button>
                     </td>
                 `;
@@ -1104,17 +1359,11 @@
             activeOrderIndex = index;
             let order = ordersList[index];
             if (!order) return;
-
-            let isMoney = order.item.includes('In-game Money');
             
-            document.getElementById('adminTargetPlayer').textContent = `Target Player: ${order.player} (Email: ${order.email})`;
+            document.getElementById('adminTargetPlayer').textContent = `Target Player: ${order.player} (Order: ${order.item})`;
             
             let textarea = document.getElementById('adminCoordsInput');
-            if (isMoney) {
-                textarea.value = `Подождите несколько минут, деньги начислятся к вам на аккаунт`;
-            } else {
-                textarea.value = `Go to coordinates X: 245, Y: 68, Z: -1020`;
-            }
+            textarea.value = `Delivery for items: ${order.item}\nCoordinates: X: 245, Y: 68, Z: -1020`;
 
             document.getElementById('adminCoordsModal').classList.remove('hidden');
             document.getElementById('adminCoordsModal').classList.add('flex');
@@ -1144,18 +1393,17 @@
                     .eq('order_id', targetOrder.dbId);
 
                 if (error) {
-                    console.error('Ошибка обновления статуса:', error);
-                    alert('Ошибка при отправке координат в базу.');
+                    console.error('Error updating status:', error);
+                    alert('Error sending coordinates to database.');
                 } else {
                     await loadOrdersFromSupabase();
                 }
             }
 
             closeAdminCoordsModal();
-            alert('Coordinates/message successfully sent to the order!');
+            alert('All coordinates and message successfully sent to the order!');
         }
 
-        // Автоматическое обновление данных с базы каждые 6 секунд (покупатели видят ответ админа, админы видят новые заказы)
         setInterval(() => {
             loadOrdersFromSupabase();
         }, 6000);
