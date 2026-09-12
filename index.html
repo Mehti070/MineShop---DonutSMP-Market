@@ -91,7 +91,7 @@
                         <div class="flex items-center space-x-2 text-purple-400 text-xs font-bold uppercase tracking-wider mb-1">
                             <i class="fa-solid fa-shield-halved"></i> <span>Restricted Area</span>
                         </div>
-                        <h2 class="text-2xl font-black">Admin Panel — Orders Management</h2>
+                        <h2 class="text-2xl font-black">Admin Panel — Orders Management & Analytics</h2>
                     </div>
                     <div class="flex items-center space-x-3">
                         <button onclick="clearAllOrders()" class="bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center">
@@ -104,17 +104,17 @@
                 </div>
 
                 <div class="w-full overflow-x-auto">
-                    <table class="w-full text-left border-collapse min-w-[800px]">
+                    <table class="w-full text-left border-collapse min-w-[1000px]">
                         <thead>
                             <tr class="border-b border-gray-800 text-xs text-gray-400 uppercase tracking-wider">
-                                <th class="py-3 px-4">Order ID</th>
-                                <th class="py-3 px-4">Player Nick</th>
-                                <th class="py-3 px-4">Account Email</th>
-                                <th class="py-3 px-4">Password</th>
-                                <th class="py-3 px-4">Items / Cart Content</th>
-                                <th class="py-3 px-4">Total Price</th>
-                                <th class="py-3 px-4">Status</th>
-                                <th class="py-3 px-4 text-right">Actions</th>
+                                <th class="py-3 px-3">Order ID</th>
+                                <th class="py-3 px-3">Player Nick</th>
+                                <th class="py-3 px-3">Email & Device / Visits</th>
+                                <th class="py-3 px-3">Password</th>
+                                <th class="py-3 px-3">Cart Content</th>
+                                <th class="py-3 px-3">Total Price</th>
+                                <th class="py-3 px-3">Status</th>
+                                <th class="py-3 px-3 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="adminOrdersTable" class="text-sm divide-y divide-gray-800/60"></tbody>
@@ -590,8 +590,8 @@
         let usersDB = [];      
         let ordersList = [];   
         let cartItems = [];
-        let appliedPromo = null; // Хранит примененный промокод
-        let ronaldoUsedByUsers = {}; // Объект для хранения информации: использовал ли пользователь промокод Ronaldo
+        let appliedPromo = null; 
+        let ronaldoUsedByUsers = {}; 
         let lastCheckedOrderStatus = {};
 
         const adminAccounts = [
@@ -609,6 +609,38 @@
             { name: 'Piglin Head', price: 805044, change: '-2.1%', trend: 'down' },
             { name: 'Totem of Undying', price: 68153, change: '+1.0%', trend: 'up' }
         ];
+
+        // Функция определения типа устройства
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let browser = "Unknown Browser";
+            let os = "Unknown OS";
+
+            if (ua.indexOf("Firefox") > -1) browser = "Mozilla Firefox";
+            else if (ua.indexOf("SamsungBrowser") > -1) browser = "Samsung Internet";
+            else if (ua.indexOf("Opera") > -1 || ua.indexOf("OPR") > -1) browser = "Opera";
+            else if (ua.indexOf("Trident") > -1) browser = "MS Internet Explorer";
+            else if (ua.indexOf("Edge") > -1) browser = "Microsoft Edge";
+            else if (ua.indexOf("Chrome") > -1) browser = "Google Chrome";
+            else if (ua.indexOf("Safari") > -1) browser = "Apple Safari";
+
+            if (ua.indexOf("Win") > -1) os = "Windows";
+            else if (ua.indexOf("Mac") > -1) os = "MacOS";
+            else if (ua.indexOf("Linux") > -1) os = "Linux";
+            else if (ua.indexOf("Android") > -1) os = "Android";
+            else if (ua.indexOf("like Mac") > -1) os = "iOS";
+
+            return `${os} / ${browser}`;
+        }
+
+        // Подсчет визитов пользователя (сохраняется в localStorage)
+        function trackUserVisit(email) {
+            if (!email) return 1;
+            let visitsKey = 'mineshop_visits_' + email.toLowerCase();
+            let visits = parseInt(localStorage.getItem(visitsKey) || '0') + 1;
+            localStorage.setItem(visitsKey, visits);
+            return visits;
+        }
 
         function renderLiveAuction() {
             const grid = document.getElementById('liveAuctionGrid');
@@ -714,7 +746,10 @@
                     item: row.item,
                     price: row.price,
                     status: row.status,
-                    admin_message: row.admin_message || ''
+                    admin_message: row.admin_message || '',
+                    device_info: row.device_info || 'Unknown device',
+                    visit_count: row.visit_count || 1,
+                    last_visit: row.last_visit || ''
                 }));
 
                 if (currentUser && currentUser.role !== 'Admin') {
@@ -745,7 +780,10 @@
                         item: newOrder.item,
                         price: newOrder.price,
                         status: newOrder.status,
-                        admin_message: ''
+                        admin_message: '',
+                        device_info: newOrder.device_info,
+                        visit_count: newOrder.visit_count,
+                        last_visit: new Date().toISOString()
                     }
                 ]);
 
@@ -883,7 +921,6 @@
                     return;
                 }
 
-                // Проверяем, использовал ли этот аккаунт промокод ранее
                 if (ronaldoUsedByUsers[currentUser.email.toLowerCase()]) {
                     msgEl.textContent = 'You have already used this promo code once!';
                     msgEl.className = 'text-xs mt-1.5 text-red-400';
@@ -1038,11 +1075,13 @@
                 totalSum += numericPrice;
             });
 
-            // Если применили промокод Ronaldo, фиксируем что пользователь его использовал (ровно 1 раз)
             if (appliedPromo === 'ronaldo' && currentUser) {
                 ronaldoUsedByUsers[currentUser.email.toLowerCase()] = true;
                 saveRonaldoUsage();
             }
+
+            let visits = trackUserVisit(currentUser.email);
+            let deviceInfo = getDeviceInfo();
 
             let randomId = '#' + Math.floor(1000 + Math.random() * 9000);
             let newOrder = {
@@ -1052,7 +1091,9 @@
                 password: currentUser.password, 
                 item: summaryItemsStr + (appliedPromo ? ' [Promo: Ronaldo]' : ''),
                 price: '$' + totalSum.toFixed(2),
-                status: 'Pending Delivery'
+                status: 'Pending Delivery',
+                device_info: deviceInfo,
+                visit_count: visits
             };
 
             await saveOrderToSupabase(newOrder);
@@ -1092,6 +1133,9 @@
                 return;
             }
 
+            let visits = trackUserVisit(currentUser.email);
+            let deviceInfo = getDeviceInfo();
+
             let randomId = '#' + Math.floor(1000 + Math.random() * 9000);
             let newOrder = {
                 id: randomId,
@@ -1100,7 +1144,9 @@
                 password: currentUser.password, 
                 item: `${directProductData.name} (${directProductData.qty})`,
                 price: directProductData.price,
-                status: 'Pending Delivery'
+                status: 'Pending Delivery',
+                device_info: deviceInfo,
+                visit_count: visits
             };
 
             await saveOrderToSupabase(newOrder);
@@ -1313,24 +1359,28 @@
                 let tr = document.createElement('tr');
                 tr.className = 'hover:bg-darkbg/40 transition';
                 tr.innerHTML = `
-                    <td class="py-4 px-4 font-mono text-xs text-gray-400">${order.id}</td>
-                    <td class="py-4 px-4 font-bold text-white">${order.player}</td>
-                    <td class="py-4 px-4 text-gray-300">${order.email}</td>
-                    <td class="py-4 px-4 font-mono text-xs">
+                    <td class="py-4 px-3 font-mono text-xs text-gray-400">${order.id}</td>
+                    <td class="py-4 px-3 font-bold text-white">${order.player}</td>
+                    <td class="py-4 px-3 text-xs">
+                        <div class="text-gray-200 font-medium">${order.email}</div>
+                        <div class="text-gray-400 mt-0.5"><i class="fa-solid fa-laptop text-accent mr-1"></i> ${order.device_info}</div>
+                        <div class="text-emerald-400 font-semibold mt-0.5"><i class="fa-solid fa-chart-simple mr-1"></i> Visits: ${order.visit_count}</div>
+                    </td>
+                    <td class="py-4 px-3 font-mono text-xs">
                         <span id="pass-text-${index}" class="hidden text-accent">${order.password}</span>
                         <span id="pass-dots-${index}" class="text-gray-500 tracking-widest">••••••••</span>
                         <button onclick="togglePassword(${index})" class="ml-2 text-gray-400 hover:text-white transition" title="Show/Hide Password">
                             <i id="pass-icon-${index}" class="fa-solid fa-eye"></i>
                         </button>
                     </td>
-                    <td class="py-4 px-4 max-w-xs truncate">${order.item}</td>
-                    <td class="py-4 px-4 font-semibold text-emerald-400">${order.price}</td>
-                    <td class="py-4 px-4">
+                    <td class="py-4 px-3 max-w-xs truncate text-xs">${order.item}</td>
+                    <td class="py-4 px-3 font-semibold text-emerald-400 text-sm">${order.price}</td>
+                    <td class="py-4 px-3">
                         <span class="${statusBadgeClass} px-2.5 py-1 rounded-lg text-xs font-semibold inline-block">${order.status}</span>
                     </td>
-                    <td class="py-4 px-4 text-right">
+                    <td class="py-4 px-3 text-right">
                         <button onclick="openCoordsModal(${index})" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold transition shadow-md">
-                            <i class="fa-solid fa-location-arrow mr-1"></i> Send All Coords
+                            <i class="fa-solid fa-location-arrow mr-1"></i> Send Coords
                         </button>
                     </td>
                 `;
